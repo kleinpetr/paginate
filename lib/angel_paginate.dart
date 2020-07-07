@@ -1,4 +1,6 @@
 /// Efficiently paginates collections of items in an object-oriented manner.
+import 'dart:html';
+
 class Paginator<T> {
   final Map<int, PaginationResult<T>> _cache = {};
   PaginationResult<T> _current;
@@ -15,13 +17,16 @@ class Paginator<T> {
   /// For example, you would only have to paginate page 1 once. Future calls would return a cached version.
   final bool useCache;
 
-  Paginator(this._items, {this.itemsPerPage: 5, this.useCache: true});
+  //after change page scroll window to top
+  final bool scrollTop;
+
+  Paginator(this._items, {this.itemsPerPage: 5, this.useCache: true, this.scrollTop: false});
 
   /// Returns `true` if there are more items at lesser page indices than the current one.
-  bool get canGoBack => _page > 0;
+  bool get canGoBack => pageNumber > 0;
 
   /// Returns `true` if there are more items at greater page indices than the current one.
-  bool get canGoForward => _page < _lastPage();
+  bool get canGoForward => pageNumber < _lastPage();
 
   /// The current page index.
   int get index => _page;
@@ -57,8 +62,7 @@ class Paginator<T> {
         nextPage: _page >= last - 1 ? -1 : _page + 2,
         startIndex: it.isEmpty ? -1 : offset,
         endIndex: offset + it.length - 1,
-        itemsPerPage:
-            itemsPerPage < _items.length ? itemsPerPage : _items.length,
+        itemsPerPage: itemsPerPage < _items.length ? itemsPerPage : _items.length,
         total: len);
   }
 
@@ -88,6 +92,8 @@ class Paginator<T> {
       _page = page - 1;
       _current = null;
     }
+
+    if (scrollTop) window.scrollTo(0, 0);
   }
 
   /// Moves the paginator back one page, if possible.
@@ -96,6 +102,8 @@ class Paginator<T> {
       _page--;
       _current = null;
     }
+
+    if (scrollTop) window.scrollTo(0, 0);
   }
 
   /// Advances the paginator one page, if possible.
@@ -104,20 +112,21 @@ class Paginator<T> {
       _page++;
       _current = null;
     }
+
+    if (scrollTop) window.scrollTo(0, 0);
   }
 }
 
 /// Stores the result of a pagination.
 abstract class PaginationResult<T> {
-  factory PaginationResult.fromMap(Map<String, dynamic> map) =>
-      new _PaginationResultImpl((map['data'] as Iterable).cast<T>(),
-          currentPage: map['current_page'],
-          endIndex: map['end_index'],
-          itemsPerPage: map['items_per_page'],
-          nextPage: map['next_page'],
-          previousPage: map['previous_page'],
-          startIndex: map['start_index'],
-          total: map['total']);
+  factory PaginationResult.fromMap(Map<String, dynamic> map) => new _PaginationResultImpl((map['data'] as Iterable).cast<T>(),
+      currentPage: map['current_page'],
+      endIndex: map['end_index'],
+      itemsPerPage: map['items_per_page'],
+      nextPage: map['next_page'],
+      previousPage: map['previous_page'],
+      startIndex: map['start_index'],
+      total: map['total']);
 
   List<T> get data;
 
@@ -146,13 +155,7 @@ class _PaginationResultImpl<T> implements PaginationResult<T> {
   final int currentPage;
 
   _PaginationResultImpl(this._data,
-      {this.currentPage,
-      this.endIndex,
-      this.itemsPerPage,
-      this.nextPage,
-      this.previousPage,
-      this.startIndex,
-      this.total});
+      {this.currentPage, this.endIndex, this.itemsPerPage, this.nextPage, this.previousPage, this.startIndex, this.total});
 
   @override
   List<T> get data => _cachedData ?? (_cachedData = new List<T>.from(_data));
