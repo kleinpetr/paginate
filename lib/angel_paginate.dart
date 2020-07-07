@@ -23,7 +23,7 @@ class Paginator<T> {
   Paginator(this._items, {this.itemsPerPage: 5, this.useCache: true, this.scrollTop: false});
 
   /// Returns `true` if there are more items at lesser page indices than the current one.
-  bool get canGoBack => pageNumber > 0;
+  bool get canGoBack => _page > 0;
 
   /// Returns `true` if there are more items at greater page indices than the current one.
   bool get canGoForward => pageNumber < _lastPage();
